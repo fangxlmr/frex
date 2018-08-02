@@ -12,8 +12,8 @@ enum {
 typedef struct _NState NState;
 struct _NState {
     int c;          /* 输入字符c */
-    NState *out2;   /* 指向下一个NFA状态节点 */
     NState *out1;   /* 指向下一个NFA状态节点 */
+    NState *out2;   /* 指向下一个NFA状态节点 */
     /*
      * 当只有一条向外的指向边时，使用out1，不使用out2
      */

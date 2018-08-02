@@ -1,11 +1,12 @@
 #include <stdlib.h>
 #include "re2nfa.h"
+#include "lexer.h"
 
 /**
  * state_malloc     新建NState
  *
- * @param ns1       NState结构-1的二级指针
- * @param ns2       NState结构-2的二级指针
+ * @param ns1       NState结构1的二级指针
+ * @param ns2       NState结构2的二级指针
  * @return          新建成功，返回1；失败返回0，并释放已分配的内存。
  */
 static int state_malloc(NState **ns1, NState **ns2)
@@ -23,12 +24,12 @@ static int state_malloc(NState **ns1, NState **ns2)
 }
 
 /**
- * nfa          创建单个nfa片段
+ * single       创建单个nfa片段
  *
  * @param c     基本字符（ASCII码，或Epsilon）
  * @return      创建成功，则返回nfa指针，失败返回NULL。
  */
-static NFA *nfa(int c)
+static NFA *single(int c)
 {
     NState *start, *end;
     NFA *nfa;
@@ -57,8 +58,8 @@ static NFA *nfa(int c)
 /**
  * cat          “与”连接两个nfa片段
  *
- * @param e1    nfa片段-1
- * @param e2    nfa片段-2
+ * @param e1    nfa片段1
+ * @param e2    nfa片段2
  * @return      连接成功，返回新的nfa片段，否则，返回NULL。
  */
 static NFA *cat(NFA *e1, NFA *e2)
@@ -73,8 +74,8 @@ static NFA *cat(NFA *e1, NFA *e2)
 /**
  * alt          “或”连接两个nfa片段
  *
- * @param e1    nfa片段-1
- * @param e2    nfa片段-2
+ * @param e1    nfa片段1
+ * @param e2    nfa片段2
  * @return      连连接成功，返回新的nfa片段，否则，返回NULL。
  */
 static NFA *alt(NFA *e1, NFA *e2)
@@ -105,12 +106,12 @@ static NFA *alt(NFA *e1, NFA *e2)
 }
 
 /**
- * closure      闭包连接
+ * star         闭包连接
  *
  * @param e1    nfa片段
  * @return      连连接成功，返回新的nfa片段，否则，返回NULL。
  */
-static NFA *closure(NFA *e)
+static NFA *star(NFA *e)
 {
     NState *start, *end;
 
@@ -135,7 +136,3 @@ static NFA *closure(NFA *e)
     return e;
 }
 
-NFA *re2nfa(char *s)
-{
-
-}
