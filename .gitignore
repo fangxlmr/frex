@@ -3,3 +3,6 @@ cmake-build-debug/
 test*
 a.out
 CMakeLists.txt
+nfa.c
+dfa.c
+.gitigore
