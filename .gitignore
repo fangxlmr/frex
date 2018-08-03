@@ -1,9 +1,0 @@
-cmake-build-debug/
-.idea
-test*
-a.out
-CMakeLists.txt
-nfa.c
-dfa.c
-.gitignore
-demo.c
