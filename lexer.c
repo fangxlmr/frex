@@ -10,7 +10,7 @@ static char next_char()
     return *(RE + INDEX++);
 }
 
-void rollback()
+static void rollback()
 {
     --INDEX;
 }
@@ -34,6 +34,7 @@ Token *next_token()
             break;
         case '\0':
             token = NULL;
+            rollback();
             break;
         case '|':
             token->t = OR;
@@ -67,4 +68,9 @@ Token *next_token()
             break;
     }
     return token;
+}
+
+int match(int c)
+{
+    return *(RE + INDEX) == c;
 }

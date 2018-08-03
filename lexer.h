@@ -2,7 +2,7 @@
 #define FREX_LEXER_H
 
 typedef enum Type {
-    CHAR, OR, STAR, LPAREN, RPAREN,
+    CHAR = 1, OR, STAR, LPAREN, RPAREN,
 }Type;
 
 typedef struct Token {
@@ -16,6 +16,6 @@ extern int INDEX;
 
 extern Token *next_token();
 
-extern void rollback();
+extern int match(int c);
 
 #endif /* FREX_LEXER_H */
