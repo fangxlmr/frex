@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "re2nfa.h"
-#include "lexer.h"
+
 
 /**
  * state_malloc     新建NState
@@ -135,4 +135,3 @@ static NFA *star(NFA *e)
     e->end   = end;
     return e;
 }
-

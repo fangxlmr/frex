@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "ast.h"
+#include "build_ast.h"
 
 AST *ast_char_new(int c)
 {
