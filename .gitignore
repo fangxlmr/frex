@@ -5,4 +5,5 @@ a.out
 CMakeLists.txt
 nfa.c
 dfa.c
-.gitigore
+.gitignore
+demo.c
