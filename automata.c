@@ -3,7 +3,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include "ast2nfa.h"
+#include "automata.h"
 
 int NSTATE = 0;
 /**

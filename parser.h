@@ -34,7 +34,6 @@
 
 #include "lexer.h"
 #include "ast.h"
-#include "build_ast.h"
 
 extern AST *re2ast(const char *re);
 #endif /* FREX_PARSER_H */
