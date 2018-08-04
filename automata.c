@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include "ast2nfa.h"
 
+int NSTATE = 0;
 /**
  * state_malloc     新建NState
  *
@@ -55,6 +56,7 @@ static NFA *nfa_atom(int c)
         free(nfa);
     }
 
+    ++NSTATE;
     return nfa;
 }
 
@@ -164,7 +166,6 @@ NFA *ast2nfa(AST *ast)
         right = ast2nfa(((AST_Cat *) ast)->right);
         return nfa_cat(left, right);
     } else {
-        printf("ast2nfa.\n");
         left = ast2nfa(((AST_Star *) ast)->next);
         return nfa_star(left);
     }
