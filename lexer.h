@@ -1,8 +1,11 @@
 #ifndef FREX_LEXER_H
 #define FREX_LEXER_H
 
+/*
+ * METACHAR包括：|*()\
+ */
 typedef enum Type {
-    CHAR = 1, OR, STAR, LPAREN, RPAREN,
+    NONMETA, METACHAR, END,
 }Type;
 
 typedef struct Token {
@@ -10,12 +13,13 @@ typedef struct Token {
     int c;
 }Token;
 
-extern const char *RE;
+extern void set_re(const char *re);
 
-extern int INDEX;
+extern char *get_re();
 
-extern Token *next_token();
+extern int getp();
 
-extern int match(int c);
+extern Token *get_token();
 
+extern void rollback();
 #endif /* FREX_LEXER_H */

@@ -2,75 +2,81 @@
 #include <stdlib.h>
 #include "lexer.h"
 
-int INDEX = 0;
-const char *RE;
+static int INDEX = 0;
+const char *RE = NULL;
 
-static char next_char()
+void set_re(const char *re)
 {
-    return *(RE + INDEX++);
+    RE = re;
 }
 
-static void rollback()
+char *get_re()
+{
+    return (char *) RE;
+}
+
+int getp()
+{
+    return INDEX;
+}
+
+void rollback()
 {
     --INDEX;
 }
 
-Token *next_token()
+static char get_char()
+{
+    return *(RE + INDEX++);
+}
+
+Token *get_token()
 {
     int c;
     Token *token;
 
-    token = (Token *) malloc(sizeof(token));
+    token = (Token *) malloc(sizeof(Token *));
     if (!token) {
+        printf("Malloc failed.\n");
         return NULL;
     }
-    token->c = 0;
 
-    c = next_char();
+    c = get_char();
     switch (c) {
         default:
-            token->t = CHAR;
+            token->t = NONMETA;
             token->c = c;
             break;
         case '\0':
-            token = NULL;
+            token->t = END;
+            token->c = '\0';
             rollback();
             break;
         case '|':
-            token->t = OR;
-            break;
         case '*':
-            token->t = STAR;
-            break;
         case '(':
-            token->t = LPAREN;
-            break;
         case ')':
-            token->t = RPAREN;
+            token->t = METACHAR;
+            token->c = c;
             break;
         case '\\':
-            c = next_char();
+            c = get_char();
             switch(c) {
                 case '|':
                 case '*':
                 case '(':
                 case ')':
                 case '\\':
-                    token->t = CHAR;
+                    token->t = NONMETA;
                     token->c = c;
                     break;
                 default:
-                    token->t = CHAR;
-                    token->c = '\\';
+                    token->t = METACHAR;
+                    token->c = c;
                     rollback();
                     break;
             }
             break;
     }
     return token;
-}
-
-int match(int c)
-{
-    return *(RE + INDEX) == c;
 }
