@@ -1,172 +1,125 @@
-/*
- * 后续遍历语法树，生成nfa。
- */
-#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "nfa.h"
 #include "automata.h"
 
-int NSTATE = 0;
-/**
- * state_malloc     新建NState
- *
- * @param ns1       NState结构1的二级指针
- * @param ns2       NState结构2的二级指针
- * @return          新建成功，返回1；失败返回0，并释放已分配的内存。
+
+void delta(List *clist, int c, List *nlist);
+DState *next_dstate(DState *d, int c);
+int is_match(List *l);
+DState *ds_tree(List *l);
+void add_nstate(List *l, NState *ns);
+
+static int listid;
+
+/*
+ * 开始匹配，运行自动机
  */
-static int state_malloc(NState **ns1, NState **ns2)
+List *l1, *l2;
+extern int NSTATE;
+int match(NFA *nfa, char *s)
 {
-    *ns1 = (NState *) malloc(sizeof(NState));
-    *ns2 = (NState *) malloc(sizeof(NState));
+    int c;
+    DState *d, *next;
 
-    if (*ns1 && *ns2) {
-        return 1;
-    } else {
-        free(*ns1);
-        free(*ns2);
-        return 0;
-    }
-}
+    /*
+     * 初始化初始DState节点d
+     */
+    d = (DState *) malloc(sizeof(DState));
+    memset(d, 1, sizeof(d));
+    /*
+     * 根据NSTATE初始化clist, nlist变量。
+     */
+    l1->ns = (NState **) malloc(NSTATE * sizeof(NState *));
+    l2->ns = (NState **) malloc(NSTATE * sizeof(NState *));
 
-/**
- * nfa_atom     创建单个nfa片段
- *
- * @param c     基本字符（ASCII码，或EPSILON）
- * @return      创建成功，则返回nfa指针，失败返回NULL。
- */
-static NFA *nfa_atom(int c)
-{
-    NState *start, *end;
-    NFA *nfa;
+    /* 初始化clist */
+    listid++;
+    add_nstate(l1, nfa->start);
+    //TODO 添加到二叉树 ds_tree(l1);
 
-    nfa = (NFA *) malloc(sizeof(NFA));
-
-    if (state_malloc(&start, &end) && nfa) {
-        end->c    = ACCEPT;
-        end->out1 = NULL;
-        end->out2 = NULL;
-
-        start->c    = c;
-        start->out1 = end;
-        start->out2 = NULL;
-
-        nfa->start = start;
-        nfa->end   = end;
-
-    } else {
-        free(nfa);
+    /*
+     * 运行nfa，生成dfa，并同步匹配
+     */
+    for (; *s; ++s) {
+        c = *s;
+        if ((next = d->next[c]) == NULL) {
+            next = next_dstate(d, c);
+        }
+        d = next;
     }
 
-    ++NSTATE;
-    return nfa;
+    return is_match(&d->l);
+
 }
 
-/**
- * nfa_cat       “与”连接两个nfa片段
- *
- * @param e1    nfa片段1
- * @param e2    nfa片段2
- * @return      连接成功，返回新的nfa片段，否则，返回NULL。
+
+/*
+ * 判断是否达到match状态
  */
-static NFA *nfa_cat(NFA *e1, NFA *e2)
+int is_match(List *l)
 {
-    e1->end->c    = EPSILON;
-    e1->end->out1 = e2->start;
+    int i;
 
-    e1->end = e2->end;
-    return e1;
-}
-
-/**
- * nfa_alt      “或”连接两个nfa片段
- *
- * @param e1    nfa片段1
- * @param e2    nfa片段2
- * @return      连连接成功，返回新的nfa片段，否则，返回NULL。
- */
-static NFA *nfa_alt(NFA *e1, NFA *e2)
-{
-    NState *start, *end;
-
-    if (state_malloc(&start, &end)) {
-        start->c    = EPSILON;
-        start->out1 = e1->start;
-        start->out2 = e2->start;
-
-        end->c    = ACCEPT;
-        end->out1 = NULL;
-        end->out2 = NULL;
-
-        e1->end->c    = EPSILON;
-        e1->end->out1 = end;
-        e2->end->c    = EPSILON;
-        e2->end->out1 = end;
-
-    } else {
-        return NULL;
+    for (i = 0; i < l->n; ++i) {
+        if (l->ns[i]->c == ACCEPT) {
+            return 1;
+        }
     }
-
-    e1->start = start;
-    e1->end   = end;
-    return e1;
-}
-
-/**
- * nfa_star     “*”闭包连接
- *
- * @param e1    nfa片段
- * @return      连连接成功，返回新的nfa片段，否则，返回NULL。
- */
-static NFA *nfa_star(NFA *e)
-{
-    NState *start, *end;
-
-    if (state_malloc(&start, &end)) {
-        end->c    = ACCEPT;
-        end->out1 = NULL;
-        end->out2 = NULL;
-
-        start->c    = EPSILON;
-        start->out1 = e->start;
-        start->out2 = end;
-
-        e->end->c    = EPSILON;
-        e->end->out1 = end;
-        e->end->out2 = e->start;
-    } else {
-        return NULL;
-    }
-
-    e->start = start;
-    e->end   = end;
-    return e;
+    return 0;
 }
 
 /*
- * 后序遍历语法树，递归构造nfa。
+ * DState *d，吃进字符c之后，
+ * 能够达到的下一个DState状态。
  */
-
-NFA *ast2nfa(AST *ast)
+DState *next_dstate(DState *d, int c)
 {
-    int c;
-    NFA *left, *right;
+    delta(&d->l, c, l1);
 
-    if (ast == NULL) {
-        return NULL;
+
+    return ds_tree(&nlist);
+}
+
+/*
+ * 转移函数delta
+ * 计算由clist集合吃进字符c后，可以转换到的nlist集合
+ */
+void delta(List *clist, int c, List *nlist)
+{
+    int i;
+    NState *ns;
+
+    listid++;   /* 标记NState的状态，是否已经被当前nlist添加 */
+    nlist->n = 0;   /* 重置nlist */
+    for (i = 0; i < clist->n; ++i) {    /* 循环clist中的每一个元素 */
+        ns = clist->ns[i];
+
+        if (ns->c == c) {   /* 存在匹配字符c的元素 */
+            /*
+             * 将ns状态，吃进字符c后，
+             * 能够到达的出口状态添加进nlist集合。
+             */
+            add_nstate(nlist, ns->out1);
+        }
     }
 
-    if (ast->k == AST_CHAR) {
-        c = ((AST_Char *) ast)->c;
-        return nfa_atom(c);
-    } else if (ast->k == AST_ALT) {
-        left  = ast2nfa(((AST_Alt *) ast)->left);
-        right = ast2nfa(((AST_Alt *) ast)->right);
-        return nfa_alt(left, right);
-    } else if (ast->k == AST_CAT) {
-        left  = ast2nfa(((AST_Cat *) ast)->left);
-        right = ast2nfa(((AST_Cat *) ast)->right);
-        return nfa_cat(left, right);
-    } else {
-        left = ast2nfa(((AST_Star *) ast)->next);
-        return nfa_star(left);
+}
+
+void add_nstate(List *l, NState *ns)
+{
+    if (ns == NULL || ns->lid == listid) {
+        return;
     }
+    ns->lid = listid;
+    /*
+     * 同时添加通过epsilon边
+     * 能够达到的状态。
+     */
+    if (ns->c == EPSILON) {
+        add_nstate(l, ns->out1);
+        add_nstate(l,ns->out2);
+        return;
+    }
+    l->ns[l->n++] = ns;
 }
