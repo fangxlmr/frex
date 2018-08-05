@@ -1,9 +1,15 @@
+/*
+ * 词法分析器的代码实现。
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer.h"
 
+/* 内部全局变量，存储lexer的解析位置 */
 static int INDEX = 0;
-const char *RE = NULL;
+/* 内部全局变量，存储lexer解析的字符串 */
+static const char *RE = NULL;
 
 void set_re(const char *re)
 {
@@ -25,6 +31,11 @@ void rollback()
     --INDEX;
 }
 
+/**
+ * get_char     从RE字符串中获取下一个字符
+ *
+ * @return      返回下一个字符
+ */
 static char get_char()
 {
     return *(RE + INDEX++);

@@ -1,9 +1,24 @@
+/*
+ * 语法分析器（parser）的代码实现。
+ *
+ * 值得注意的是，这里是使用“递归下降分析法”实现的。
+ * 递归下降分析，要求对每一个终结符都给出一个分析函数，
+ * 提供给每个非终结符函数调用。
+ * 因此，根据parser.h中定义的文法，
+ * 在开头处就直接声明了一系列内部静态分析函数，
+ * 他们都是递归下降分析法所必要的。
+ */
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "parser.h"
 
+/**
+ * error    报错函数
+ */
 static void error();
+
+
 static AST *parse_re();
 static AST *parse_union();
 static AST *parse_simple();

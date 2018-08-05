@@ -1,9 +1,16 @@
+/*
+ * ast2nfa的代码实现。
+ */
+
 #include <stdlib.h>
 #include "ast2nfa.h"
+
 /*
- * ast转nfa
+ * 全局变量NSTATE，
+ * 记录总共产生的NState数量
  */
-int NSTATE;  /* 记录总共产生的NState数量 */
+int NSTATE;
+
 /**
  * state_malloc     新建NState
  *
@@ -147,7 +154,7 @@ static NFA *nfa_star(NFA *e)
 }
 
 /*
- * 后序遍历语法树，递归构造nfa。
+ * 后序遍历AST，递归构造NFA。
  */
 NFA *ast2nfa(AST *ast)
 {
@@ -158,17 +165,33 @@ NFA *ast2nfa(AST *ast)
         return NULL;
     }
 
+    /*
+     * 后续遍历时，根绝Kind k域的值，判断后续数据域
+     * 的类型，并将该节点强制转换为相应的数据类型。
+     * 再使用AST中相应节点的构造函数，递归构造出NFA。
+     *
+     * if-else代码块中的分支，对应与ast.h中定义的
+     * 运算种类。
+     */
+
+    /* 字符类型 */
     if (ast->k == AST_CHAR) {
         c = ((AST_Char *) ast)->c;
         return nfa_atom(c);
+
+        /* 选择算符 */
     } else if (ast->k == AST_ALT) {
         left  = ast2nfa(((AST_Alt *) ast)->left);
         right = ast2nfa(((AST_Alt *) ast)->right);
         return nfa_alt(left, right);
+
+        /* 连接算符 */
     } else if (ast->k == AST_CAT) {
         left  = ast2nfa(((AST_Cat *) ast)->left);
         right = ast2nfa(((AST_Cat *) ast)->right);
         return nfa_cat(left, right);
+
+        /* “*”闭包算符 */
     } else {
         left = ast2nfa(((AST_Star *) ast)->next);
         return nfa_star(left);
