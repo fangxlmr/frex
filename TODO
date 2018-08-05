@@ -1,0 +1,6 @@
+这是一个TODO LIST
+
+1. 增加模块，用于存储DState，使用MD5算法，计算List的唯一性id，
+以此来确定一个唯一的DState，不使用排序的办法确定DState。
+
+2. 修复lexer里的内存泄漏问题。
