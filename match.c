@@ -1,17 +1,37 @@
+/*
+ * match函数运行自动机的代码实现
+ */
 #include <stdlib.h>
 #include <string.h>
-#include "nfa.h"
+#include "dfa.h"
 #include "match.h"
 
+/*
+ * 生成DState时，用来区分该NState是否已经添加进当前
+ * List，每次进入转移函数delta，listid++
+ */
 static int listid = 1;
-void add_nstate(List *l, NState *ns)
+
+/**
+ * add_nstate   将NState添加进集合List
+ *
+ * @param l     集合List
+ * @param ns    NState
+ */
+static void add_nstate(List *l, NState *ns)
 {
+    /*
+     * 根据NState中的lid与当前循环中的listid是否
+     * 相等，判断是否添加
+     */
     if (ns == NULL || ns->lid == listid) {
         return;
     }
+    /* 未加入List的NState，添加后修改lid */
     ns->lid = listid;
+
     /*
-     * 同时添加通过epsilon边
+     * 同时递归添加通过epsilon边
      * 能够达到的状态。
      */
     if (ns->c == EPSILON) {
@@ -19,29 +39,45 @@ void add_nstate(List *l, NState *ns)
         add_nstate(l, ns->out2);
         return;
     }
+    /* 添加当前NState进入List集合 */
     l->ns[l->n++] = ns;
 }
 
-/*
- * 转移函数delta
- * 计算由clist集合吃进字符c后，可以转换到的nlist集合
+/**
+ * delta        转移函数
+ *
+ * @param cl    当前NState集合（clist）
+ * @param c     字符c
+ * @param nl    接收字符c后可能转换到的NState集合
+ *
+ * @note
+ * 1. 计算由clist集合吃进字符c后，可以转换到的nlist集合
+ * 2. 避免每次进入函数都初始化nl，设置全局变量nlist，
+ *    nlist在match函数中分配内存并初始化。
+ *    因此，这里的nl总是等于&nlist。
  */
-List  nlist;    /* 避免每次进入函数都初始化，设置全局变量 */
-/* 这里的nl每次都是nlist */
+List nlist;
 void delta(List *cl, int c, List *nl)
 {
     int i;
     NState *ns;
 
-    listid++;   /* 标记NState的状态，是否已经被当前nlist添加 */
-    nl->n = 0;   /* 重置nlist */
-    for (i = 0; i < cl->n; ++i) {    /* 循环clist中的每一个元素 */
+    /*
+     * 标记当前List的状态，
+     * 是NState是否已经添加进nlist的依据。
+     */
+    listid++;
+    /* 重置nlist */
+    nl->n = 0;
+
+    /* 循环clist中的每一个元素 */
+    for (i = 0; i < cl->n; ++i) {
         ns = cl->ns[i];
 
-        if (ns->c == c) {   /* 存在匹配字符c的元素 */
+        if (ns->c == c) {   /* ns接收字符c */
             /*
-             * 将ns状态，吃进字符c后，
-             * 能够到达的出口状态添加进nlist集合。
+             * 将ns吃进字符c后，
+             * 能够到达的状态添加进nlist集合。
              */
             add_nstate(nl, ns->out1);
         }
@@ -77,6 +113,10 @@ static int listcmp(List *l1, List *l2)
 }
 
 
+/**
+ * 二叉树，用于存储已经计算出的DState
+ * 注意：List l能够唯一确定一个DState。
+ */
 DState *root;
 DState *ds_tree(List *l)
 {
@@ -109,9 +149,15 @@ DState *ds_tree(List *l)
     return d;
 }
 
-/*
- * DState *d，吃进字符c之后，
- * 能够达到的下一个DState状态。
+/**
+ * next_dstate  下一个DState
+ *
+ * @param d     当前DState
+ * @param c     输入字符c
+ *
+ * @return      返回当前DState接收字符c后能够达到的DState。
+ * //TODO 当不存在DState时，未处理，
+ * //TODO 包括delta函数和ds_tree都没有处理这个问题
  */
 DState *next_dstate(DState *d, int c)
 {
@@ -120,8 +166,12 @@ DState *next_dstate(DState *d, int c)
     return d->next[c] = ds_tree(&nlist);
 }
 
-/*
- * 判断是否达到接受状态
+/**
+ * is_match     是否为接受状态
+ *
+ * @param l     NState集合List
+ * @return      若l中含有ACCEPT的NState，则返回1，
+ *              否则，返回0。
  */
 int is_match(List *l)
 {
@@ -134,10 +184,8 @@ int is_match(List *l)
     }
     return 0;
 }
-/*
- * 开始匹配，运行自动机
- */
-extern int NSTATE;
+
+extern int NSTATE;  /* 生成的NState数量，在ast2nfa.h中定义 */
 int match(NFA *nfa, char *str)
 {
     int c;
@@ -150,7 +198,7 @@ int match(NFA *nfa, char *str)
     nlist.n  = 0;
 
     /*
-     * 新建并初始化DState节点d
+     * 新建初始DState节点d
      */
     add_nstate(&nlist, nfa->start);
     d = ds_tree(&nlist);        /* 初始节点存进二叉树 */
