@@ -1,23 +1,25 @@
 #include <stdio.h>
 #include "lexer.h"
 #include "parser.h"
-#include "ast.h"
-#include "automata.h"
-
+#include "ast2nfa.h"
+#include "match.h"
 
 int main()
 {
     AST *ast;
     NFA *nfa;
-    char *re = "a*|";
+    char *re = "a(b|c)";
+    char *str = "abbcc";
 
     ast = re2ast(re);
     nfa = ast2nfa(ast);
 
-    int table[NSTATE][256];
+    if (match(nfa, str) != 0) {
+        printf("Match.\n");
+    } else {
+        printf("Error.\n");
+    }
 
-
-    printf("Done.\n");
     return 0;
 }
 
