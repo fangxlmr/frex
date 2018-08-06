@@ -18,7 +18,7 @@
  * 之后一个Kind k数据域，后续的数据域（或指针域）
  * 是无法被访问的。
  */
-AST *ast_char_new(int c)
+AST *ast_char(int c)
 {
     AST_Char *p;
 
@@ -27,10 +27,11 @@ AST *ast_char_new(int c)
         p->k = AST_CHAR;
         p->c = c;
     }
+
     return p;
 }
 
-AST *ast_cat_new(AST *left, AST *right)
+AST *ast_cat(AST *left, AST *right)
 {
     AST_Cat *p;
 
@@ -44,10 +45,11 @@ AST *ast_cat_new(AST *left, AST *right)
         p->left  = left;
         p->right = right;
     }
+
     return p;
 }
 
-AST *ast_alt_new(AST *left, AST *right)
+AST *ast_alt(AST *left, AST *right)
 {
     AST_Alt *p;
 
@@ -56,24 +58,28 @@ AST *ast_alt_new(AST *left, AST *right)
     }
 
     p = (AST_Alt *) malloc(sizeof(p));
-
     if (p) {
         p->k = AST_ALT;
         p->left  = left;
         p->right = right;
     }
+
     return p;
 }
 
-AST *ast_star_new(AST *next)
+AST *ast_star(AST *next)
 {
     AST_Star *p;
 
-    p = (AST_Star *) malloc(sizeof(p));
+    if (next == NULL) {
+        return NULL;
+    }
 
+    p = (AST_Star *) malloc(sizeof(p));
     if (p) {
         p->k = AST_STAR;
         p->next = next;
     }
+
     return p;
 }

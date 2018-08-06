@@ -16,7 +16,7 @@
  * 使用get_re函数获取set_re函数设置的字符串。
  * 使用getp函数获取解析的位置。
  *
- * 使用get_token获取下一个记号，
+ * 使用next_token获取下一个记号，
  * 使用rollback将解析位置回滚一位。
  */
 
@@ -75,7 +75,7 @@ extern char *get_re();
 extern int getp();
 
 /**
- * get_token    获取下一个记号
+ * next_token   获取下一个记号
  *
  * @return      若存在下一个记号，则返回记号指针，
  *              若内存分配失败，则返回NULL。
@@ -87,7 +87,7 @@ extern int getp();
  *
  *              因此，该函数只有在内存分配失败时，才会返回NULL。
  */
-extern Token *get_token();
+extern Token *next_token();
 
 /**
  * rollback     将解析位置回滚一位

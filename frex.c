@@ -8,8 +8,8 @@ int main()
 {
     AST *ast;
     NFA *nfa;
-    char *re = "ab*(c|d)*";
-    char *str = "abbccd";
+    char *re = "a\\**";
+    char *str = "a*";
 
     ast = re2ast(re);
     nfa = ast2nfa(ast);
@@ -17,7 +17,7 @@ int main()
     if (match(nfa, str) != 0) {
         printf("Match.\n");
     } else {
-        printf("Error.\n");
+        printf("Not match.\n");
     }
 
     return 0;

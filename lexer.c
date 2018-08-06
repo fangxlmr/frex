@@ -6,8 +6,8 @@
 #include <stdlib.h>
 #include "lexer.h"
 
-/* 内部全局变量，存储lexer的解析位置 */
-static int INDEX = 0;
+/* 内部全局变量，存储lexer的对re字符串的解析位置 */
+static int _RE_INDEX = 0;
 /* 内部全局变量，存储lexer解析的字符串 */
 static const char *RE = NULL;
 
@@ -23,25 +23,25 @@ char *get_re()
 
 int getp()
 {
-    return INDEX;
+    return _RE_INDEX;
 }
 
 void rollback()
 {
-    --INDEX;
+    --_RE_INDEX;
 }
 
 /**
- * get_char     从RE字符串中获取下一个字符
+ * next_char     从RE字符串中获取下一个字符
  *
  * @return      返回下一个字符
  */
-static char get_char()
+static char next_char()
 {
-    return *(RE + INDEX++);
+    return *(RE + _RE_INDEX++);
 }
 
-Token *get_token()
+Token *next_token()
 {
     int c;
     Token *token;
@@ -52,7 +52,7 @@ Token *get_token()
         return NULL;
     }
 
-    c = get_char();
+    c = next_char();
     switch (c) {
         default:
             token->t = NONMETA;
@@ -71,7 +71,7 @@ Token *get_token()
             token->c = c;
             break;
         case '\\':
-            c = get_char();
+            c = next_char();
             switch(c) {
                 case '|':
                 case '*':

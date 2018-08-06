@@ -6,7 +6,7 @@
  * 定义了抽象语法树（AST）的中的算符种类属性Kind，
  * 定义了AST的不同的Kind属性，定义了对应的节点结构。
  *
- * 定义了对应节点的AST生成函数ast_char_new等。
+ * 定义了对应节点的AST生成函数ast_char等。
  *
  * @note    在下方定义的抽象语法树节点结构中，不同的Kind值
  *          代表了不同的运算种类。通过读取Kind值，即可确定
@@ -80,37 +80,37 @@ typedef struct EXP_Star {
 }AST_Star;
 
 /**
- * ast_char_new     新建字符型节点
+ * ast_char         新建字符型节点
  *
  * @param c         字符c
  * @return          新建成功，返回AST节点指针，失败则返回NULL。
  */
-extern AST *ast_char_new(int c);
+extern AST *ast_char(int c);
 
 /**
- * ast_cat_new      新建连接运算节点
+ * ast_cat          新建连接运算节点
  *
  * @param left      AST左侧子树
  * @param right     AST右侧子树
  * @return          新建成功，返回AST节点指针，失败则返回NULL。
  */
-extern AST *ast_cat_new(AST *left, AST *right);
+extern AST *ast_cat(AST *left, AST *right);
 
 /**
- * ast_alt_new      新建选择运算节点
+ * ast_alt          新建选择运算节点
  *
  * @param left      AST左侧子树
  * @param right     AST右侧子树
  * @return          新建成功，返回AST节点指针，失败则返回NULL。
  */
-extern AST *ast_alt_new(AST *left, AST *right);
+extern AST *ast_alt(AST *left, AST *right);
 
 /**
- * ast_star_new     新建“*”闭包运算节点
+ * ast_star         新建“*”闭包运算节点
  *
  * @param next      AST子树
  * @return          新建成功，返回AST节点指针，失败则返回NULL。
  */
-extern AST *ast_star_new(AST *next);
+extern AST *ast_star(AST *next);
 
 #endif /* FREX_AST_H */

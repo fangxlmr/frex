@@ -64,7 +64,6 @@ static NFA *nfa_atom(int c)
         free(e);
     }
 
-    ++NSTATE;
     return e;
 }
 
@@ -77,10 +76,14 @@ static NFA *nfa_atom(int c)
  */
 static NFA *nfa_cat(NFA *e1, NFA *e2)
 {
+    if ((e1 && e2) == 0) {
+        return NULL;
+    }
+
     e1->end->c    = EPSILON;
     e1->end->out1 = e2->start;
-
     e1->end = e2->end;
+
     return e1;
 }
 
@@ -94,6 +97,10 @@ static NFA *nfa_cat(NFA *e1, NFA *e2)
 static NFA *nfa_alt(NFA *e1, NFA *e2)
 {
     NState *start, *end;
+
+    if ((e1 && e2) == 0) {
+        return NULL;
+    }
 
     if (state_malloc(&start, &end)) {
         start->c    = EPSILON;
@@ -129,6 +136,10 @@ static NFA *nfa_alt(NFA *e1, NFA *e2)
 static NFA *nfa_star(NFA *e)
 {
     NState *start, *end;
+
+    if (!e) {
+        return NULL;
+    }
 
     if (state_malloc(&start, &end)) {
         end->c    = ACCEPT;
@@ -173,26 +184,21 @@ NFA *ast2nfa(AST *ast)
      * if-else代码块中的分支，对应与ast.h中定义的
      * 运算种类。
      */
-
-    /* 字符类型 */
-    if (ast->k == AST_CHAR) {
+    if (ast->k == AST_CHAR) {       /* 字符类型 */
         c = ((AST_Char *) ast)->c;
         return nfa_atom(c);
 
-        /* 选择算符 */
-    } else if (ast->k == AST_ALT) {
+    } else if (ast->k == AST_ALT) {     /* 选择算符 */
         left  = ast2nfa(((AST_Alt *) ast)->left);
         right = ast2nfa(((AST_Alt *) ast)->right);
         return nfa_alt(left, right);
 
-        /* 连接算符 */
-    } else if (ast->k == AST_CAT) {
+    } else if (ast->k == AST_CAT) {     /* 连接算符 */
         left  = ast2nfa(((AST_Cat *) ast)->left);
         right = ast2nfa(((AST_Cat *) ast)->right);
         return nfa_cat(left, right);
 
-        /* “*”闭包算符 */
-    } else {
+    } else {        /* “*”闭包算符 */
         left = ast2nfa(((AST_Star *) ast)->next);
         return nfa_star(left);
     }

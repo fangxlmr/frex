@@ -8,16 +8,18 @@
  * 在开头处就直接声明了一系列内部静态分析函数，
  * 他们都是递归下降分析法所必要的。
  */
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include <setjmp.h>
 #include "parser.h"
 
 /**
- * error    报错函数
+ * handler      错误处理函数
+ *
+ * @param id    错误代码
  */
-static void error();
-
+static void handler(int id);
 
 static AST *parse_re();
 static AST *parse_union();
@@ -26,37 +28,53 @@ static AST *parse_basic();
 static AST *parse_cat();
 static AST *parse_element();
 
-void error()
+/* 全局env，用于错误处理 */
+static jmp_buf env;
+
+AST *re2ast(const char *re)
 {
-    printf("Parsing error around position %d.\n", getp());
-    exit(-1);
+    /* 错误标记，0表示无错误 */
+    int id;
+
+    if ((id = setjmp(env)) == 0) {
+        set_re(re);
+    } else {
+        handler(id);
+    }
+
+    return parse_re();
 }
 
 AST *parse_re()
 {
     AST *left, *right;
+
     left  = parse_simple();
     right = parse_union();
-    return ast_alt_new(left, right);
+
+    return ast_alt(left, right);
 }
 
 AST *parse_union() {
+    AST *p;
     AST *left, *right;
     Token *token;
 
-    token = get_token();
-    if (token == NULL) {
-        return NULL;
-    } else if (token->t == END) {
-        return NULL;
+    token = next_token();
+    if (token == NULL || token->t == END) {
+        p = NULL;
+
     } else if (token->t == METACHAR && token->c == '|') {
         left  = parse_simple();
         right = parse_union();
-        return ast_cat_new(left, right);
+        p = ast_alt(left, right);
+
     } else {
         rollback();
-        return NULL;
+        p = NULL;
     }
+
+    return p;
 }
 
 AST *parse_simple()
@@ -66,7 +84,7 @@ AST *parse_simple()
     left  = parse_basic();
     right = parse_cat();
 
-    return ast_cat_new(left, right);
+    return ast_cat(left, right);
 }
 
 AST *parse_cat()
@@ -79,7 +97,7 @@ AST *parse_cat()
     }
     right = parse_cat();
 
-    return ast_cat_new(left, right);
+    return ast_cat(left, right);
 }
 
 AST *parse_basic()
@@ -88,15 +106,18 @@ AST *parse_basic()
     Token *token;
 
     p = parse_element();
-    token = get_token();
+    token = next_token();
     if (token->t == END) {
-        return p;
+        ;
+
     } else if (token->t == METACHAR && token->c == '*') {
-        return ast_star_new(p);
+        p = ast_star(p);
+
     } else {
         rollback();
-        return p;
     }
+
+    return p;
 }
 
 AST *parse_element()
@@ -104,41 +125,54 @@ AST *parse_element()
     AST *p;
     Token *token;
 
-    p = NULL;
-    token = get_token();
+    token = next_token();
     switch (token->t) {
         case METACHAR:      // METACHAR
             if (token->c == '(') {
                 p = parse_re();
-                token = get_token();
+                token = next_token();
 
-                if (token->t == END) {
-                    printf("Missing ')'.\n");
-                    error();
-                } else if (token->t == METACHAR && token->c == ')') {
-                    return p;
+                if (token->t == METACHAR && token->c == ')') {
+                    ;
                 } else {
-                    error();
+                    longjmp(env, 1);    /* Missing a ')'. */
                 }
+
             } else {
                 rollback();
-                return NULL;
+                p = NULL;
             }
             break;
-        case END:         // END OF STRING
-            return NULL;
+
+        case END:         // END OF PARSING STRING
+            p = NULL;
+            break;
+
         default:        // NONMETA
             if (isprint(token->c)) {
-                p = ast_char_new(token->c);
-                return p;
+                p = ast_char(token->c);
             } else {
-                error();
+                longjmp(env, 2);    /* Char is not printable. */
             }
+            break;
     }
+
+    return p;
 }
 
-AST *re2ast(const char *re)
+void handler(int id)
 {
-    set_re(re);
-    return parse_re();
+    switch (id) {
+        case 1:
+            printf("Missing a ')' at position %d.\n", getp());
+            break;
+        case 2:
+            printf("Character at position %d is not printable.\n", getp());
+            break;
+        case 3:
+        default:
+            printf("Unknown error.\n");
+            break;
+    }
+    exit(id);
 }

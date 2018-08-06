@@ -3,14 +3,18 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+#include <setjmp.h>
 #include "dfa.h"
 #include "match.h"
 
 /*
- * 生成DState时，用来区分该NState是否已经添加进当前
- * List，每次进入转移函数delta，listid++
+ * 使用delta函数生成DState时，
+ * 标记NState是否添加进DState的List列表。
  */
 static int listid = 1;
+
+static void handler(int id);
 
 /**
  * add_nstate   将NState添加进集合List
@@ -21,15 +25,15 @@ static int listid = 1;
 static void add_nstate(List *l, NState *ns)
 {
     /*
-     * 根据NState中的lid与当前循环中的listid是否
-     * 相等，判断是否添加
+     * 判断NState中的lid与当前循环中的listid是否
+     * 相等，相等的略过，不相等的添加进nlist。
      */
     if (ns == NULL || ns->lid == listid) {
         return;
     }
-    /* 未加入List的NState，添加后修改lid */
-    ns->lid = listid;
 
+    /* 更新lid */
+    ns->lid = listid;
     /*
      * 同时递归添加通过epsilon边
      * 能够达到的状态。
@@ -39,6 +43,7 @@ static void add_nstate(List *l, NState *ns)
         add_nstate(l, ns->out2);
         return;
     }
+
     /* 添加当前NState进入List集合 */
     l->ns[l->n++] = ns;
 }
@@ -70,15 +75,10 @@ void delta(List *cl, int c, List *nl)
     /* 重置nlist */
     nl->n = 0;
 
-    /* 循环clist中的每一个元素 */
-    for (i = 0; i < cl->n; ++i) {
+    for (i = 0; i < cl->n; ++i) {   /* 遍历clist */
         ns = cl->ns[i];
 
-        if (ns->c == c) {   /* ns接收字符c */
-            /*
-             * 将ns吃进字符c后，
-             * 能够到达的状态添加进nlist集合。
-             */
+        if (ns->c == c) {   /* ns接收字符c，加入nlist */
             add_nstate(nl, ns->out1);
         }
     }
@@ -186,20 +186,27 @@ int is_match(List *l)
 }
 
 extern int NSTATE;  /* 生成的NState数量，在ast2nfa.h中定义 */
+static jmp_buf env; /* 错误处理 */
 int match(NFA *nfa, char *str)
 {
     int c;
+    int jmpret;
     DState *d, *next;
 
-    /*
-     * 根据NSTATE初始化nlist变量。
-     */
+    if ((jmpret = setjmp(env)) != 0) {
+        handler(jmpret);
+    }
+
+    if (!nfa) {
+        longjmp(env, 1);
+    }
+    if (!str) {
+        longjmp(env, 2);
+    }
+
+    /* 初始化 */
     nlist.ns = (NState **) malloc(NSTATE * sizeof(NState *));
     nlist.n  = 0;
-
-    /*
-     * 新建初始DState节点d
-     */
     add_nstate(&nlist, nfa->start);
     d = ds_tree(&nlist);        /* 初始节点存进二叉树 */
 
@@ -215,4 +222,25 @@ int match(NFA *nfa, char *str)
     }
 
     return is_match(&d->l);
+}
+
+/**
+ * handler      异常处理函数
+ *
+ * @param id    异常号
+ */
+void handler(int id)
+{
+    switch (id) {
+        case 1:
+            printf("NFA was not established.\n");
+            break;
+        case 2:
+            printf("No valid string to be parsed.\n");
+            break;
+        default:
+            printf("Unknown error.\n");
+            break;
+    }
+    exit(id);
 }
