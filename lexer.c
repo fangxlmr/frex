@@ -54,9 +54,9 @@ Token *next_token()
 
     c = next_char();
     switch (c) {
-        /* 非元字符，NONMETA */
+        /* 非元字符，Non-metachar */
         default:
-            token->t = NONMETA;
+            token->t = OTHER;
             token->c = c;
             break;
 
@@ -76,7 +76,7 @@ Token *next_token()
             token->c = c;
             break;
 
-        /* 转义字符，特殊NONMETA字符 */
+        /* 转义字符 */
         case '\\':
             c = next_char();
             switch(c) {
@@ -85,7 +85,7 @@ Token *next_token()
                 case '(':
                 case ')':
                 case '\\':
-                    token->t = NONMETA;
+                    token->t = ESCAPE;
                     token->c = c;
                     break;
                 default:

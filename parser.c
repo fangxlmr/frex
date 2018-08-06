@@ -60,18 +60,22 @@ AST *parse_union() {
     AST *left, *right;
     Token *token;
 
+    p = NULL;
     token = next_token();
     if (token == NULL || token->t == END) {
-        p = NULL;
+        ;
 
     } else if (token->t == METACHAR && token->c == '|') {
-        left  = parse_simple();
+        left = parse_simple();
         right = parse_union();
         p = ast_alt(left, right);
 
+    } else if (token->t == ESCAPE) {
+        rollback();
+        rollback();
+
     } else {
         rollback();
-        p = NULL;
     }
 
     return p;
@@ -118,29 +122,20 @@ AST *parse_basic()
             if (token->c == '*') {
                 p = ast_star(p);
 
-                /* 转义字符需要回溯两个位置 */
             } else {
-                rollback();
                 rollback();
             }
             break;
 
-        /* 普通字符 */
-        case NONMETA:
-            switch (token->c) {
-                /* 转义字符需要回溯两个位置 */
-                case '*':
-                case '|':
-                case '(':
-                case ')':
-                    rollback();
-                    rollback();
-                    break;
+        /* 转义字符需要回溯两个位置 */
+        case ESCAPE:
+            rollback();
+            rollback();
+            break;
 
-                /* 普通字符回溯一个位置 */
-                default:
-                    rollback();
-            }
+        /* 普通字符 */
+        case OTHER:
+            rollback();
             break;
     }
 
@@ -152,6 +147,7 @@ AST *parse_element()
     AST *p;
     Token *token;
 
+    p = NULL;
     token = next_token();
     switch (token->t) {
         case METACHAR:      // METACHAR
@@ -167,15 +163,13 @@ AST *parse_element()
 
             } else {
                 rollback();
-                p = NULL;
             }
             break;
 
         case END:         // END OF PARSING STRING
-            p = NULL;
             break;
 
-        default:        // NONMETA
+        default:        // OTHER and ESCAPE
             if (isprint(token->c)) {
                 p = ast_char(token->c);
             } else {

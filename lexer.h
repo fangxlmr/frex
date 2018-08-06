@@ -28,9 +28,10 @@
  * 的所属类型，总的分为 3 类，如果需要，后续可以
  * 继续扩展。
  *
- * NONMETA：     非元字符，除了元字符之外的所有字符。
  * METACHAR：    元字符，包括：|*()\，可扩展
+ * ESCAPE:       转义字符
  * END：         结束符，表示没有可用的字符，源代码匹配完毕。
+ * OTHER：      非元字符，除了元字符之外的所有字符。
  *
  * @note        元字符本身也存在对应符号的非元字符，
  *              需要使用转义，如下：
@@ -40,7 +41,7 @@
  *              "\\"  ->  "\"
  */
 typedef enum Type {
-    NONMETA, METACHAR, END,
+    ESCAPE, METACHAR, END, OTHER,
 }Type;
 
 /**

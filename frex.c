@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "lexer.h"
 #include "parser.h"
 #include "ast2nfa.h"
 #include "match.h"
@@ -8,8 +7,8 @@ int main()
 {
     AST *ast;
     NFA *nfa;
-    char *re = "a\\**";
-    char *str = "a*";
+    char *re  = "a(b|\\*|c)*";
+    char *str = "ab*****ccc";
 
     ast = re2ast(re);
     nfa = ast2nfa(ast);
