@@ -54,15 +54,20 @@ Token *next_token()
 
     c = next_char();
     switch (c) {
+        /* 非元字符，NONMETA */
         default:
             token->t = NONMETA;
             token->c = c;
             break;
+
+        /* 结束符 */
         case '\0':
             token->t = END;
             token->c = '\0';
             rollback();
             break;
+
+        /* 元字符 */
         case '|':
         case '*':
         case '(':
@@ -70,6 +75,8 @@ Token *next_token()
             token->t = METACHAR;
             token->c = c;
             break;
+
+        /* 转义字符，特殊NONMETA字符 */
         case '\\':
             c = next_char();
             switch(c) {

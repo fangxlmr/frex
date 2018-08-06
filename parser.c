@@ -107,14 +107,41 @@ AST *parse_basic()
 
     p = parse_element();
     token = next_token();
-    if (token->t == END) {
-        ;
 
-    } else if (token->t == METACHAR && token->c == '*') {
-        p = ast_star(p);
+    switch (token->t) {
+        /* 结束符 */
+        case END:
+            break;
 
-    } else {
-        rollback();
+        /* 元字符 */
+        case METACHAR:
+            if (token->c == '*') {
+                p = ast_star(p);
+
+                /* 转义字符需要回溯两个位置 */
+            } else {
+                rollback();
+                rollback();
+            }
+            break;
+
+        /* 普通字符 */
+        case NONMETA:
+            switch (token->c) {
+                /* 转义字符需要回溯两个位置 */
+                case '*':
+                case '|':
+                case '(':
+                case ')':
+                    rollback();
+                    rollback();
+                    break;
+
+                /* 普通字符回溯一个位置 */
+                default:
+                    rollback();
+            }
+            break;
     }
 
     return p;
