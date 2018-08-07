@@ -36,7 +36,7 @@ struct _NState {
  */
 typedef struct _NFA NFA;
 struct _NFA {
-    NState *start;  /* NFA片段开始状态 */
+    NState *beg;    /* NFA片段开始状态 */
     NState *end;    /* NFA片段结束状态 */
 };
 

@@ -41,24 +41,24 @@ static int state_malloc(NState **ns1, NState **ns2)
  */
 static NFA *nfa_atom(int c)
 {
-    NState *start, *end;
+    NState *beg, *end;
     NFA *e;
 
     e = (NFA *) malloc(sizeof(NFA));
 
-    if (state_malloc(&start, &end) && e) {
+    if (state_malloc(&beg, &end) && e) {
         end->c    = ACCEPT;
         end->lid  = 0;
         end->out1 = NULL;
         end->out2 = NULL;
 
-        start->c    = c;
-        start->lid  = 0;
-        start->out1 = end;
-        start->out2 = NULL;
+        beg->c    = c;
+        beg->lid  = 0;
+        beg->out1 = end;
+        beg->out2 = NULL;
 
-        e->start = start;
-        e->end   = end;
+        e->beg = beg;
+        e->end = end;
 
     } else {
         free(e);
@@ -81,7 +81,7 @@ static NFA *nfa_cat(NFA *e1, NFA *e2)
     }
 
     e1->end->c    = EPSILON;
-    e1->end->out1 = e2->start;
+    e1->end->out1 = e2->beg;
     e1->end = e2->end;
 
     return e1;
@@ -96,17 +96,17 @@ static NFA *nfa_cat(NFA *e1, NFA *e2)
  */
 static NFA *nfa_alt(NFA *e1, NFA *e2)
 {
-    NState *start, *end;
+    NState *beg, *end;
 
     if ((e1 && e2) == 0) {
         return NULL;
     }
 
-    if (state_malloc(&start, &end)) {
-        start->c    = EPSILON;
-        start->lid  = 0;
-        start->out1 = e1->start;
-        start->out2 = e2->start;
+    if (state_malloc(&beg, &end)) {
+        beg->c    = EPSILON;
+        beg->lid  = 0;
+        beg->out1 = e1->beg;
+        beg->out2 = e2->beg;
 
         end->c    = ACCEPT;
         end->lid  = 0;
@@ -122,8 +122,8 @@ static NFA *nfa_alt(NFA *e1, NFA *e2)
         return NULL;
     }
 
-    e1->start = start;
-    e1->end   = end;
+    e1->beg = beg;
+    e1->end = end;
     return e1;
 }
 
@@ -135,32 +135,32 @@ static NFA *nfa_alt(NFA *e1, NFA *e2)
  */
 static NFA *nfa_star(NFA *e)
 {
-    NState *start, *end;
+    NState *beg, *end;
 
     if (!e) {
         return NULL;
     }
 
-    if (state_malloc(&start, &end)) {
+    if (state_malloc(&beg, &end)) {
         end->c    = ACCEPT;
         end->lid  = 0;
         end->out1 = NULL;
         end->out2 = NULL;
 
-        start->c    = EPSILON;
-        start->lid  = 0;
-        start->out1 = e->start;
-        start->out2 = end;
+        beg->c    = EPSILON;
+        beg->lid  = 0;
+        beg->out1 = e->beg;
+        beg->out2 = end;
 
         e->end->c    = EPSILON;
         e->end->out1 = end;
-        e->end->out2 = e->start;
+        e->end->out2 = e->beg;
     } else {
         return NULL;
     }
 
-    e->start = start;
-    e->end   = end;
+    e->beg = beg;
+    e->end = end;
     return e;
 }
 

@@ -75,7 +75,7 @@ void delta(List *cl, int c, List *nl)
     /* 重置nlist */
     nl->n = 0;
 
-    for (i = 0; i < cl->n; ++i) {   /* 遍历clist */
+    for (i = 0; i < cl->n; ++i) {
         ns = cl->ns[i];
 
         if (ns->c == c) {   /* ns接收字符c，加入nlist */
@@ -185,7 +185,7 @@ int is_match(List *l)
     return 0;
 }
 
-extern int NSTATE;  /* 生成的NState数量，在ast2nfa.h中定义 */
+extern int NSTATE;
 static jmp_buf env; /* 错误处理 */
 int match(NFA *nfa, char *str)
 {
@@ -207,7 +207,7 @@ int match(NFA *nfa, char *str)
     /* 初始化 */
     nlist.ns = (NState **) malloc(NSTATE * sizeof(NState *));
     nlist.n  = 0;
-    add_nstate(&nlist, nfa->start);
+    add_nstate(&nlist, nfa->beg);
     d = ds_tree(&nlist);        /* 初始节点存进二叉树 */
 
     /*
