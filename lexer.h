@@ -38,6 +38,7 @@
  *              "\|"  ->  "|"
  *              "\*"  ->  "*"
  *              "\("  ->  "("
+ *              "\)"  ->  ")"
  *              "\\"  ->  "\"
  */
 typedef enum Type {
@@ -76,6 +77,13 @@ extern char *get_re();
 extern int getp();
 
 /**
+ * get_char     获取下一个前看符号
+ *
+ * @return      返回下一个字符
+ */
+char get_char();
+
+/**
  * next_token   获取下一个记号
  *
  * @return      若存在下一个记号，则返回记号指针，
@@ -89,6 +97,15 @@ extern int getp();
  *              因此，该函数只有在内存分配失败时，才会返回NULL。
  */
 extern Token *next_token();
+
+/**
+ * step         将解析位置按需推进一位
+ *
+ * @param c     目标字符
+ * @return      当下一个字符等于c时，解析位置向前推进一位，
+ *              并返回非0值，否则，不推进，且返回0。
+ */
+extern int step(int c);
 
 /**
  * rollback     将解析位置回滚一位

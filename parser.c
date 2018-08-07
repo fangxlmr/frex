@@ -58,24 +58,12 @@ AST *parse_re()
 AST *parse_union() {
     AST *p;
     AST *left, *right;
-    Token *token;
 
     p = NULL;
-    token = next_token();
-    if (token == NULL || token->t == END) {
-        ;
-
-    } else if (token->t == METACHAR && token->c == '|') {
+    if (step('|')) {
         left = parse_simple();
         right = parse_union();
         p = ast_alt(left, right);
-
-    } else if (token->t == ESCAPE) {
-        rollback();
-        rollback();
-
-    } else {
-        rollback();
     }
 
     return p;
@@ -107,36 +95,10 @@ AST *parse_cat()
 AST *parse_basic()
 {
     AST *p;
-    Token *token;
 
     p = parse_element();
-    token = next_token();
-
-    switch (token->t) {
-        /* 结束符 */
-        case END:
-            break;
-
-        /* 元字符 */
-        case METACHAR:
-            if (token->c == '*') {
-                p = ast_star(p);
-
-            } else {
-                rollback();
-            }
-            break;
-
-        /* 转义字符需要回溯两个位置 */
-        case ESCAPE:
-            rollback();
-            rollback();
-            break;
-
-        /* 普通字符 */
-        case OTHER:
-            rollback();
-            break;
+    if (step('*')) {
+        p = ast_star(p);
     }
 
     return p;
@@ -148,32 +110,28 @@ AST *parse_element()
     Token *token;
 
     p = NULL;
+    if (step('(')) {
+        p = parse_re();
+
+        if (step(')')) {
+            return p;
+        } else {
+            longjmp(env, 1);        /* Error 1: Missing a ')'. */
+        }
+    }
+
     token = next_token();
     switch (token->t) {
-        case METACHAR:      // METACHAR
-            if (token->c == '(') {
-                p = parse_re();
-                token = next_token();
-
-                if (token->t == METACHAR && token->c == ')') {
-                    ;
-                } else {
-                    longjmp(env, 1);    /* Missing a ')'. */
-                }
-
-            } else {
-                rollback();
-            }
+        case END:   /* END of STRING */
             break;
-
-        case END:         // END OF PARSING STRING
+        case METACHAR:  /* METACHAR */
+            rollback();
             break;
-
-        default:        // OTHER and ESCAPE
+        default:    /* OTHER and ESCAPE */
             if (isprint(token->c)) {
                 p = ast_char(token->c);
             } else {
-                longjmp(env, 2);    /* Char is not printable. */
+                longjmp(env, 2);    /* Error 2: Char is not printable. */
             }
             break;
     }

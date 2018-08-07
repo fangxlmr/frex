@@ -7,8 +7,8 @@ int main()
 {
     AST *ast;
     NFA *nfa;
-    char *re  = "a(b|\\*|c)*";
-    char *str = "ab*****ccc";
+    char *re  = "a(b|c|d)*\\**";
+    char *str = "abbbcccbcbcbbcdbcbdcdd******";
 
     ast = re2ast(re);
     nfa = ast2nfa(ast);

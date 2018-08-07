@@ -26,6 +26,16 @@ int getp()
     return _RE_INDEX;
 }
 
+int step(int c)
+{
+    if (*(RE + _RE_INDEX) == c) {
+        ++_RE_INDEX;
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 void rollback()
 {
     --_RE_INDEX;
@@ -39,6 +49,11 @@ void rollback()
 static char next_char()
 {
     return *(RE + _RE_INDEX++);
+}
+
+char get_char()
+{
+    return *(RE + _RE_INDEX);
 }
 
 Token *next_token()
